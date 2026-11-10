@@ -1,0 +1,12 @@
+# The website snapshots are shared for this assignment only - never commit them.
+snapshots/*
+!snapshots/README.md
+snapshots_zip/
+*.zip
+
+results/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.venv/
