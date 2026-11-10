@@ -885,6 +885,13 @@ def _expand_days(spanned: str) -> list[str]:
 
 
 def _hours_by_day(variants: list[Obs]) -> str:
+    """Every schedule on file, merged day by day and collapsed into day ranges.
+
+    Branches keep different hours, so the honest answer is the full picture
+    rather than one branch's schedule presented as the general one - but
+    "Monday-Thursday 8:30 a.m.-5 p.m." reads far better than the same line
+    repeated four times.
+    """
     per_day: dict[str, list[str]] = {d: [] for d in _DAY_ORDER}
     for o in variants:
         for days, hours in o.extras.get("rows", []):
@@ -892,12 +899,20 @@ def _hours_by_day(variants: list[Obs]) -> str:
                 h = clean(hours)
                 if h and h not in per_day[d]:
                     per_day[d].append(h)
-    out = []
+    runs: list[tuple[list[str], tuple[str, ...]]] = []
     for d in _DAY_ORDER:
-        vals = per_day[d]
+        vals = tuple(per_day[d][:3])
         if not vals:
             continue
-        out.append(f"{d.capitalize()} {' or '.join(vals[:3])}")
+        if runs and runs[-1][1] == vals:
+            runs[-1][0].append(d)
+        else:
+            runs.append(([d], vals))
+    out = []
+    for days, vals in runs:
+        span = days[0].capitalize() if len(days) == 1 else \
+            f"{days[0].capitalize()}-{days[-1].capitalize()}"
+        out.append(f"{span} {' or '.join(vals)}")
     return "; ".join(out)
 
 
